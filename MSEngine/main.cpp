@@ -95,7 +95,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     ComPtr<ID3D11RenderTargetView> renderTargetView;
     device->CreateRenderTargetView(backBuffer.Get(), nullptr, &renderTargetView);
-    /*
+    
     ComPtr <ID3D11Buffer> vertexBuffer;
 
     struct Vertex {
@@ -117,7 +117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     initData.pSysMem = vertices;
 
     device->CreateBuffer(&bd, &initData, vertexBuffer.GetAddressOf());
-    */
+    
     float clearColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };  // R, G, B, A — 파란색
     deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
     swapChain->Present(1, 0);
