@@ -136,6 +136,14 @@
   <ItemGroup>
     <None Include="..\.gitignore" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Renderer\Shaders\PixelShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Renderer\Shaders\VertexShader.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
