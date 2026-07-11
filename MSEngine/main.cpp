@@ -118,6 +118,44 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     device->CreateBuffer(&bd, &initData, vertexBuffer.GetAddressOf());
     
+    ComPtr<ID3DBlob> vsBlob;
+    HRESULT hrVS = D3DCompileFromFile(
+        L"Renderer/Shaders/VertexShader.hlsl",
+        nullptr, nullptr,
+        "VS", "vs_5_0",
+        0, 0,
+        &vsBlob, nullptr
+    );
+
+    if (FAILED(hrVS))
+    {
+        MessageBox(nullptr, L"Vertex shader compilation failed", L"Error", MB_OK | MB_ICONERROR);
+        return 0;
+    }
+
+    ComPtr<ID3D11VertexShader> vertexShader;
+    device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, vertexShader.GetAddressOf());
+
+    ComPtr<ID3DBlob> psBlob;
+    HRESULT hrPS = D3DCompileFromFile(
+        L"Renderer/Shaders/PixelShader.hlsl",
+        nullptr, nullptr,
+        "PS", "ps_5_0",
+        0, 0,
+        &psBlob, nullptr
+    );
+
+    if (FAILED(hrPS))
+    {
+        MessageBox(nullptr, L"Pixel shader compilation failed", L"Error", MB_OK | MB_ICONERROR);
+        return 0;
+    }
+
+    ComPtr <ID3D11PixelShader> pixelShader;
+    device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, pixelShader.GetAddressOf());
+
+
+
     float clearColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };  // R, G, B, A — 파란색
     deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
     swapChain->Present(1, 0);
