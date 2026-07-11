@@ -17,9 +17,9 @@ struct MemoryMetrics {
     }
 };
 
-static MemoryMetrics g_metrics;
+inline MemoryMetrics g_metrics;
 
-void* operator new(size_t size) {
+inline void* operator new(size_t size) {
     g_metrics.totalAllocated += size;
     g_metrics.currentUsage += size;
     g_metrics.allocationCount++;
@@ -30,7 +30,7 @@ void* operator new(size_t size) {
     return ptr;
 }
 
-void operator delete(void* ptr, size_t size) noexcept {
+inline void operator delete(void* ptr, size_t size) noexcept {
     g_metrics.totalFreed += size;
     g_metrics.currentUsage -= size;
     g_metrics.allocationCount--;
@@ -38,7 +38,7 @@ void operator delete(void* ptr, size_t size) noexcept {
     free(ptr);
 }
 
-void* operator new[](size_t size) {
+inline void* operator new[](size_t size) {
     g_metrics.totalAllocated += size;
     g_metrics.currentUsage += size;
     g_metrics.allocationCount++;
@@ -49,7 +49,7 @@ void* operator new[](size_t size) {
     return ptr;
 }
 
-void operator delete[](void* ptr, size_t size) noexcept {
+inline void operator delete[](void* ptr, size_t size) noexcept {
     g_metrics.totalFreed += size;
     g_metrics.currentUsage -= size;
     g_metrics.allocationCount--;
