@@ -154,12 +154,42 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ComPtr <ID3D11PixelShader> pixelShader;
     device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, pixelShader.GetAddressOf());
 
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+    };
 
-
-    float clearColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };  // R, G, B, A — 파란색
-    deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
-    swapChain->Present(1, 0);
+    ComPtr<ID3D11InputLayout> inputLayout;
+    device->CreateInputLayout(layout, 1, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), inputLayout.GetAddressOf());
     
+    UINT stride = sizeof(Vertex);   // 정점 하나의 크기 (바이트)
+    UINT offset = 0;                // 버퍼 시작 지점에서 얼마나 떨어진 곳부터 읽을지
+
+    deviceContext->IASetInputLayout(inputLayout.Get());
+    deviceContext->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
+    deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    deviceContext->VSSetShader(vertexShader.Get(), nullptr, 0);
+    deviceContext->PSSetShader(pixelShader.Get(), nullptr, 0);
+
+    deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), nullptr);
+
+    D3D11_VIEWPORT viewport = {};
+    viewport.Width = 800.0f;
+    viewport.Height = 600.0f;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+
+    deviceContext->RSSetViewports(1, &viewport);
+
+    float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // R, G, B, A — 검정
+    deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
+
+    deviceContext->Draw(3, 0);
+
+    swapChain->Present(1, 0);
+
     // 4. 메시지 루프 (GetMessage / TranslateMessage / DispatchMessage)
     MSG msg = {};
     while (GetMessage(&msg, nullptr, 0, 0))

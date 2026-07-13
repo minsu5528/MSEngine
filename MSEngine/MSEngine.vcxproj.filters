@@ -22,6 +22,12 @@
     <Filter Include="Core\Math">
       <UniqueIdentifier>{f740c495-0f90-4c20-9684-8af579af1ce3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{0b8a7ad5-20e1-4f2d-9e32-d893979a8509}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Shaders">
+      <UniqueIdentifier>{376d87cf-1923-4c10-b2ba-bd0ff3957587}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Memory\MemoryTracker.h">
@@ -44,5 +50,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />
+    <None Include="Renderer\Shaders\PixelShader.hlsl">
+      <Filter>Renderer\Shaders</Filter>
+    </None>
+    <None Include="Renderer\Shaders\VertexShader.hlsl">
+      <Filter>Renderer\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
