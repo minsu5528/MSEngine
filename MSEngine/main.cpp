@@ -38,7 +38,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         L"My Window",               // 창 제목 (타이틀바 텍스트) — 네가 정하는 값
         WS_OVERLAPPEDWINDOW,        // dwStyle: 테두리+최소화/최대화 버튼 있는 일반 창
         CW_USEDEFAULT, CW_USEDEFAULT,  // X, Y 위치 — OS가 알아서 배치하게 두는 매크로
-        800, 600,                   // 너비, 높이 — 네가 정하는 값
+        800, 800,                   // 너비, 높이 — 네가 정하는 값
         nullptr,                    // 부모 창 (없음)
         nullptr,                    // 메뉴 (없음)
         hInstance,
@@ -63,7 +63,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     DXGI_SWAP_CHAIN_DESC scDesc = {};
     scDesc.BufferCount = 1;
-    scDesc.BufferDesc.Width = 800; scDesc.BufferDesc.Height = 600;
+    scDesc.BufferDesc.Width = 800; scDesc.BufferDesc.Height = 800;
     scDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     scDesc.OutputWindow = hwnd;
@@ -103,8 +103,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     };
 
     Vertex vertices[] = {
-    {  0.0f,  0.5f, 0.0f },
-    {  0.5f, -0.5f, 0.0f },
+    {  -0.5f,  0.5f, 0.0f },
+    {  0.5f, 0.5f, 0.0f },
+    { -0.5f, -0.5f, 0.0f },
+    { 0.5f, 0.5f, 0.0f },
+    { 0.5f, -0.5f, 0.0f },
     { -0.5f, -0.5f, 0.0f }
     };
 
@@ -175,7 +178,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     D3D11_VIEWPORT viewport = {};
     viewport.Width = 800.0f;
-    viewport.Height = 600.0f;
+    viewport.Height = 800.0f;
     viewport.MinDepth = 0.0f;
     viewport.MaxDepth = 1.0f;
     viewport.TopLeftX = 0;
@@ -186,7 +189,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // R, G, B, A — 검정
     deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
 
-    deviceContext->Draw(3, 0);
+    deviceContext->Draw(6, 0);
 
     swapChain->Present(1, 0);
 
