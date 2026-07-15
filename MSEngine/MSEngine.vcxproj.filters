@@ -42,6 +42,9 @@
     <ClInclude Include="Core\Math\Vector2.h">
       <Filter>Core\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Memory\ResourceTracker.h">
+      <Filter>Core\Memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

@@ -129,6 +129,7 @@
     <ClInclude Include="Core\Math\Vector2.h" />
     <ClInclude Include="Core\Memory\MemoryTracker.h" />
     <ClInclude Include="Core\Memory\ObjectPool.h" />
+    <ClInclude Include="Core\Memory\ResourceTracker.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

@@ -1,10 +1,12 @@
-﻿#include "Core/Memory/MemoryTracker.h"
+﻿#define INITGUID
 
 #include <windows.h>
-#include <d3d11.h>
 #include <d3dcompiler.h>
+#include <d3d11.h>
 #include <wrl/client.h>
+#include "Core/Memory/ResourceTracker.h"
 using Microsoft::WRL::ComPtr;
+
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -14,8 +16,9 @@ using Microsoft::WRL::ComPtr;
 // 컴파일러가 WinMain을 컴파일하는 시점에 이 함수의 존재를 이미 알아야 하기 때문.
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
+ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
+    ComPtr<ID3D11Debug> debug;
+
     // 1. WNDCLASSEX 채우고 RegisterClassEx 호출
     WNDCLASSEX wc = {};                    // 일단 전부 0으로 초기화
     wc.cbSize = sizeof(WNDCLASSEX);        // 필수 — 이거 빠지면 RegisterClassEx 실패
@@ -27,7 +30,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         // 여기 걸리면 cbSize나 lpfnWndProc 안 채운 게 원인일 확률 높음
         MessageBox(nullptr, L"Window class registration failed", L"Error", MB_OK | MB_ICONERROR);
-        return 0;
+        return debug;
     }
 
     // 2. CreateWindowEx 호출 → HWND 받기
@@ -49,7 +52,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         // 실패 시 원인 파악: GetLastError() 찍어보면 에러 코드 나온다
         MessageBox(nullptr, L"Window creation failed", L"Error", MB_OK | MB_ICONERROR);
-        return 0;
+        return debug;
     }
 
     // 3. ShowWindow(hwnd, nCmdShow), UpdateWindow(hwnd)
@@ -60,7 +63,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ComPtr<ID3D11Device> device;
     ComPtr <ID3D11DeviceContext> deviceContext;
     ComPtr<IDXGISwapChain> swapChain;
-    
+
     DXGI_SWAP_CHAIN_DESC scDesc = {};
     scDesc.BufferCount = 1;
     scDesc.BufferDesc.Width = 800; scDesc.BufferDesc.Height = 800;
@@ -74,7 +77,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         nullptr,                    // 어떤 그래픽 어댑터(GPU) 쓸지 — nullptr면 기본 어댑터
         D3D_DRIVER_TYPE_HARDWARE,   // GPU로 처리 (소프트웨어 렌더러 아님)
         nullptr,                    // 소프트웨어 렌더러 모듈 (안 씀)
-        0,                          // 생성 플래그 (디버그 레이어 켤 때 여기 씀, 지금은 0)
+        D3D11_CREATE_DEVICE_DEBUG,                          // 생성 플래그 (디버그 레이어 켤 때 여기 씀, 지금은 0)
         nullptr, 0,                 // 사용할 Feature Level 배열 — nullptr,0이면 지원 가능한 최신 버전 자동 선택
         D3D11_SDK_VERSION,          // 고정값, 항상 이 매크로 그대로 씀
         &scDesc,
@@ -87,16 +90,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (FAILED(hr))
     {
         MessageBox(nullptr, L"Device/SwapChain creation failed", L"Error", MB_OK | MB_ICONERROR);
-        return 0;
+        return debug;
     }
+
+    device.As(&debug);
 
     ComPtr<ID3D11Texture2D>backBuffer;
     swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuffer.GetAddressOf());
 
     ComPtr<ID3D11RenderTargetView> renderTargetView;
     device->CreateRenderTargetView(backBuffer.Get(), nullptr, &renderTargetView);
-    
-    ComPtr <ID3D11Buffer> vertexBuffer;
+
+    ComPtr<ID3D11Buffer> Buffer_temp; // vertexBuffer를 위한 temp
 
     struct Vertex {
         float x, y, z;
@@ -119,8 +124,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     D3D11_SUBRESOURCE_DATA initData = {};
     initData.pSysMem = vertices;
 
-    device->CreateBuffer(&bd, &initData, vertexBuffer.GetAddressOf());
-    
+    device->CreateBuffer(&bd, &initData, Buffer_temp.GetAddressOf());
+    TrackedComResource<ID3D11Buffer> vertexBuffer(Buffer_temp, bd.ByteWidth, "VertexBuffer_Triangle");
+
     ComPtr<ID3DBlob> vsBlob;
     HRESULT hrVS = D3DCompileFromFile(
         L"Renderer/Shaders/VertexShader.hlsl",
@@ -133,11 +139,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (FAILED(hrVS))
     {
         MessageBox(nullptr, L"Vertex shader compilation failed", L"Error", MB_OK | MB_ICONERROR);
-        return 0;
+        return debug;
     }
 
-    ComPtr<ID3D11VertexShader> vertexShader;
-    device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, vertexShader.GetAddressOf());
+    ComPtr<ID3D11VertexShader> VertexShader_temp; // VertexShader를 위한 temp
+    device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, VertexShader_temp.GetAddressOf());
+    TrackedComResource<ID3D11VertexShader> vertexShader(VertexShader_temp, vsBlob->GetBufferSize(), "VertexShader_Triangle");
+
 
     ComPtr<ID3DBlob> psBlob;
     HRESULT hrPS = D3DCompileFromFile(
@@ -151,11 +159,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (FAILED(hrPS))
     {
         MessageBox(nullptr, L"Pixel shader compilation failed", L"Error", MB_OK | MB_ICONERROR);
-        return 0;
+        return debug;
     }
 
-    ComPtr <ID3D11PixelShader> pixelShader;
-    device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, pixelShader.GetAddressOf());
+    ComPtr <ID3D11PixelShader> pixelShader_temp;
+    device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, pixelShader_temp.GetAddressOf());
+    TrackedComResource<ID3D11PixelShader> pixelShader(pixelShader_temp, psBlob->GetBufferSize(), "PixelShader_Triangle");
+
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
     { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
@@ -163,7 +173,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     ComPtr<ID3D11InputLayout> inputLayout;
     device->CreateInputLayout(layout, 1, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), inputLayout.GetAddressOf());
-    
+
     UINT stride = sizeof(Vertex);   // 정점 하나의 크기 (바이트)
     UINT offset = 0;                // 버퍼 시작 지점에서 얼마나 떨어진 곳부터 읽을지
 
@@ -201,6 +211,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
+    deviceContext->ClearState();   // 파이프라인에 바인딩된 모든 리소스 해제
+    deviceContext->Flush();        // GPU에 아직 안 보낸 명령 큐를 실제로 실행시킴
+
+    return debug;
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+    ComPtr<ID3D11Debug> debug = RunApp(hInstance, nCmdShow);
+
+    AllocConsole();
+
+    if (debug) {
+        debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+    }
+    else {
+        OutputDebugString(L"Debug interface unavailable — RunApp may have exited early or debug layer not enabled.\n");
+    }
+
+    FILE* dummyOut;
+    freopen_s(&dummyOut, "CONOUT$", "w", stdout);
+
+    FILE* dummyIn;
+    freopen_s(&dummyIn, "CONIN$", "r", stdin);
+
+    g_metrics.PrintReport();
+
+    std::cin.get();
 
     return 0;
 }
