@@ -17,12 +17,22 @@ Inherited and modernized the core systems proven in TetrisCore_Engine.
 - Vector2 / Matrix2x2 math library
 - Migrated fixed-size containers from raw C arrays to `std::array` for safer bounds-checked access
 
-### v0.7 - dx11-bootstrap (In Progress)
+### v0.7 - dx11-bootstrap (Completed)
 
 - Win32 window creation
 - Direct3D 11 device and swap chain initialization
 - First triangle render
-- Zero memory leak verification via Memory Tracker
+- MemoryTracker extended to track DX11 resource lifetimes by category (Buffer / Shader / Texture) with peak GPU memory tracking
+- Cross-validated against the debug layer's `ID3D11Debug::ReportLiveDeviceObjects`
+
+```
+[Resource Report]
+Buffers created: 1, destroyed: 1
+Shaders created: 2, destroyed: 2
+Textures created: 0, destroyed: 0
+Peak GPU memory: 1036 bytes
+Outstanding: 0
+```
 
 ### v0.8 - 3d-transform-camera (Planned)
 
@@ -58,8 +68,9 @@ Inherited and modernized the core systems proven in TetrisCore_Engine.
 ```
 MSEngine/
   Core/
-    Memory/    # MemoryTracker, ObjectPool
+    Memory/    # MemoryTracker, ObjectPool, ResourceTracker
     Math/      # Vector2, Matrix2x2
-  Renderer/    # DirectX 11 rendering systems (in progress)
+  Renderer/
+    Shaders/   # VertexShader.hlsl, PixelShader.hlsl
   main.cpp
 ```
