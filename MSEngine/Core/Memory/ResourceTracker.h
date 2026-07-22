@@ -12,6 +12,7 @@ template<typename T> struct ResourceCategory;
 template<> struct ResourceCategory<ID3D11Buffer> { static constexpr ResourceType value = ResourceType::Buffer; };
 template<> struct ResourceCategory<ID3D11VertexShader> { static constexpr ResourceType value = ResourceType::Shader; };
 template<> struct ResourceCategory<ID3D11PixelShader> { static constexpr ResourceType value = ResourceType::Shader; };
+template<> struct ResourceCategory<ID3D11Texture2D> { static constexpr ResourceType value = ResourceType::Texture; };
 
 template<typename T>
 class TrackedComResource {

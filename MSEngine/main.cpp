@@ -5,6 +5,8 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include "Core/Memory/ResourceTracker.h"
+#include "Core/Math/Transform.h"
+
 using Microsoft::WRL::ComPtr;
 
 
@@ -15,6 +17,12 @@ using Microsoft::WRL::ComPtr;
 // 이유: WNDCLASSEX.lpfnWndProc에 이 함수 주소를 등록하려면,
 // 컴파일러가 WinMain을 컴파일하는 시점에 이 함수의 존재를 이미 알아야 하기 때문.
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+struct ConstantBuffer {
+    XMMATRIX world;
+    XMMATRIX view;
+    XMMATRIX projection;
+};
 
 ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
     ComPtr<ID3D11Debug> debug;
@@ -108,12 +116,14 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
     };
 
     Vertex vertices[] = {
-    {  -0.5f,  0.5f, 0.0f },
-    {  0.5f, 0.5f, 0.0f },
-    { -0.5f, -0.5f, 0.0f },
-    { 0.5f, 0.5f, 0.0f },
-    { 0.5f, -0.5f, 0.0f },
-    { -0.5f, -0.5f, 0.0f }
+    { -0.5f, -0.5f, -0.5f }, // 0
+    {  0.5f, -0.5f, -0.5f }, // 1
+    {  0.5f,  0.5f, -0.5f }, // 2
+    { -0.5f,  0.5f, -0.5f }, // 3
+    { -0.5f, -0.5f,  0.5f }, // 4
+    {  0.5f, -0.5f,  0.5f }, // 5
+    {  0.5f,  0.5f,  0.5f }, // 6
+    { -0.5f,  0.5f,  0.5f }, // 7
     };
 
     D3D11_BUFFER_DESC bd = {};
@@ -127,17 +137,105 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
     device->CreateBuffer(&bd, &initData, Buffer_temp.GetAddressOf());
     TrackedComResource<ID3D11Buffer> vertexBuffer(Buffer_temp, bd.ByteWidth, "VertexBuffer_Triangle");
 
+    UINT indices[36] = {
+        3,2,0  ,2,1,0, // 앞
+        4,6,7  ,4,5,6, // 뒤
+        7,6,3  ,6,2,3, // 위
+        0,1,4  ,1,5,4, // 아래
+        2,6,1  ,6,5,1, // 오른쪽
+        7,3,4  ,3,0,4 // 왼쪽
+    };
+
+    ComPtr<ID3D11Buffer> Index_Buffer_temp; // indexBuffer를 위한 temp
+
+    D3D11_BUFFER_DESC id = {};
+    id.Usage = D3D11_USAGE_IMMUTABLE;
+    id.ByteWidth = sizeof(indices);
+    id.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+    D3D11_SUBRESOURCE_DATA initData1 = {};
+    initData1.pSysMem = indices;
+
+    device->CreateBuffer(&id, &initData1, Index_Buffer_temp.GetAddressOf());
+    TrackedComResource<ID3D11Buffer> indexvertexBuffer(Index_Buffer_temp, id.ByteWidth, "IndexVertexBuffer_Triangle");
+
+    ConstantBuffer constant = {};
+
+    ComPtr<ID3D11Buffer> constant_Buffer_temp; // indexBuffer를 위한 temp
+    
+    D3D11_BUFFER_DESC cbd = {};
+    cbd.Usage = D3D11_USAGE_DYNAMIC;
+    cbd.ByteWidth = sizeof(ConstantBuffer);
+    cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+    device->CreateBuffer(&cbd, nullptr, constant_Buffer_temp.GetAddressOf());
+    TrackedComResource<ID3D11Buffer> constantvertexBuffer(constant_Buffer_temp, cbd.ByteWidth, "constantVertexBuffer_Triangle");
+
+    Transform cubeTransform;
+    cubeTransform.rotation = { 0.5f, 0.5f, 0.0f };
+
+    XMVECTOR eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+    XMVECTOR at = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
+    XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, 800.0f / 800.0f, 0.01f, 100.0f);
+
+    D3D11_MAPPED_SUBRESOURCE mapped = {};
+    deviceContext->Map(constantvertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+    ConstantBuffer* cb = (ConstantBuffer*)mapped.pData;
+    cb->world = XMMatrixTranspose(cubeTransform.GetWorldMatrix());
+    cb->view = XMMatrixTranspose(view);
+    cb->projection = XMMatrixTranspose(projection);
+    deviceContext->Unmap(constantvertexBuffer.Get(), 0);
+
+    D3D11_TEXTURE2D_DESC depthDesc = {};
+    depthDesc.Width = 800;
+    depthDesc.Height = 800;
+    depthDesc.MipLevels = 1;
+    depthDesc.ArraySize = 1;
+    depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;  // 깊이값 24비트 + 스텐실 8비트
+    depthDesc.SampleDesc.Count = 1;
+    depthDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;   // 지금까지 안 쓴 새 BindFlags 값
+
+    ComPtr<ID3D11Texture2D> depthTexture_temp;
+    device->CreateTexture2D(&depthDesc, nullptr, depthTexture_temp.GetAddressOf());
+
+    ComPtr<ID3D11DepthStencilView> depthStencilView;
+    device->CreateDepthStencilView(depthTexture_temp.Get(), nullptr, depthStencilView.GetAddressOf());
+
+
+
+
+    D3D11_RASTERIZER_DESC rastDesc = {}; // 컬링
+    rastDesc.FillMode = D3D11_FILL_SOLID;
+    rastDesc.CullMode = D3D11_CULL_BACK;
+    ComPtr<ID3D11RasterizerState> rasterState;
+    HRESULT hrRast = device->CreateRasterizerState(&rastDesc, rasterState.GetAddressOf());
+    if (FAILED(hrRast))
+    {
+        OutputDebugString(L"CreateRasterizerState failed\n");
+    }
+    deviceContext->RSSetState(rasterState.Get());
+
     ComPtr<ID3DBlob> vsBlob;
+    ComPtr<ID3DBlob> errorBlob;
+
     HRESULT hrVS = D3DCompileFromFile(
         L"Renderer/Shaders/VertexShader.hlsl",
         nullptr, nullptr,
         "VS", "vs_5_0",
         0, 0,
-        &vsBlob, nullptr
+        &vsBlob, errorBlob.GetAddressOf()
     );
 
     if (FAILED(hrVS))
     {
+        if (errorBlob)
+        {
+            OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+        }
         MessageBox(nullptr, L"Vertex shader compilation failed", L"Error", MB_OK | MB_ICONERROR);
         return debug;
     }
@@ -179,12 +277,14 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
 
     deviceContext->IASetInputLayout(inputLayout.Get());
     deviceContext->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
+    deviceContext->IASetIndexBuffer(indexvertexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+    deviceContext->VSSetConstantBuffers(0, 1, constantvertexBuffer.GetAddressOf());  // 0번 슬롯 = register(b0)
     deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     deviceContext->VSSetShader(vertexShader.Get(), nullptr, 0);
     deviceContext->PSSetShader(pixelShader.Get(), nullptr, 0);
 
-    deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), nullptr);
+    deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), depthStencilView.Get());
 
     D3D11_VIEWPORT viewport = {};
     viewport.Width = 800.0f;
@@ -198,8 +298,10 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
 
     float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // R, G, B, A — 검정
     deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
+    deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-    deviceContext->Draw(6, 0);
+    //deviceContext->Draw(6, 0);
+    deviceContext->DrawIndexed(36, 0, 0);
 
     swapChain->Present(1, 0);
 
