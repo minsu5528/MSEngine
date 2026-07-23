@@ -181,13 +181,7 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
     XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, 800.0f / 800.0f, 0.01f, 100.0f);
 
-    D3D11_MAPPED_SUBRESOURCE mapped = {};
-    deviceContext->Map(constantvertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-    ConstantBuffer* cb = (ConstantBuffer*)mapped.pData;
-    cb->world = XMMatrixTranspose(cubeTransform.GetWorldMatrix());
-    cb->view = XMMatrixTranspose(view);
-    cb->projection = XMMatrixTranspose(projection);
-    deviceContext->Unmap(constantvertexBuffer.Get(), 0);
+    
 
     D3D11_TEXTURE2D_DESC depthDesc = {};
     depthDesc.Width = 800;
@@ -296,23 +290,48 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
 
     deviceContext->RSSetViewports(1, &viewport);
 
-    float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // R, G, B, A — 검정
-    deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
-    deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+    cubeTransform.rotation.y += 0.01f;   // DeltaTime은 Week 7에 연결 예정, 지금은 고정값으로
+    bool running = true;
+    MSG msg = {};
+    while (running)
+    {
+        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_QUIT) { running = false; }
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        else
+        {
+            float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // R, G, B, A — 검정
+            deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
+            deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-    //deviceContext->Draw(6, 0);
-    deviceContext->DrawIndexed(36, 0, 0);
+            cubeTransform.rotation.y += 0.01f;   // DeltaTime은 Week 7에 연결 예정, 지금은 고정값으로
 
-    swapChain->Present(1, 0);
+            D3D11_MAPPED_SUBRESOURCE mapped = {};
+            deviceContext->Map(constantvertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+            ConstantBuffer* cb = (ConstantBuffer*)mapped.pData;
+            cb->world = XMMatrixTranspose(cubeTransform.GetWorldMatrix());
+            cb->view = XMMatrixTranspose(view);
+            cb->projection = XMMatrixTranspose(projection);
+            deviceContext->Unmap(constantvertexBuffer.Get(), 0);
+
+            //deviceContext->Draw(6, 0);
+            deviceContext->DrawIndexed(36, 0, 0);
+
+            swapChain->Present(1, 0);
+        }
+    }
 
     // 4. 메시지 루프 (GetMessage / TranslateMessage / DispatchMessage)
-    MSG msg = {};
+    /*MSG msg = {};
     while (GetMessage(&msg, nullptr, 0, 0))
     {
 
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-    }
+    }*/
 
     deviceContext->ClearState();   // 파이프라인에 바인딩된 모든 리소스 해제
     deviceContext->Flush();        // GPU에 아직 안 보낸 명령 큐를 실제로 실행시킴
