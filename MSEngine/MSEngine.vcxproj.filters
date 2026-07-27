@@ -28,6 +28,9 @@
     <Filter Include="Renderer\Shaders">
       <UniqueIdentifier>{376d87cf-1923-4c10-b2ba-bd0ff3957587}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Time">
+      <UniqueIdentifier>{b09851e6-60b1-4d16-b4c5-f65affb6485f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Memory\MemoryTracker.h">
@@ -48,10 +51,22 @@
     <ClInclude Include="Core\Math\Transform.h">
       <Filter>Core\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Time\Timer.h">
+      <Filter>Core\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\Camera.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Time\Timer.cpp">
+      <Filter>Core\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\Camera.cpp">
+      <Filter>Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

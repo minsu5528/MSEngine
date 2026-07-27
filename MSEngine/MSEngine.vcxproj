@@ -131,9 +131,13 @@
     <ClInclude Include="Core\Memory\MemoryTracker.h" />
     <ClInclude Include="Core\Memory\ObjectPool.h" />
     <ClInclude Include="Core\Memory\ResourceTracker.h" />
+    <ClInclude Include="Core\Time\Timer.h" />
+    <ClInclude Include="Renderer\Camera.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Time\Timer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer\Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />

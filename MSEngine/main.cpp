@@ -7,6 +7,9 @@
 #include <wrl/client.h>
 #include "Core/Memory/ResourceTracker.h"
 #include "Core/Math/Transform.h"
+#include "Renderer/Camera.h"
+#include "Core/Time/Timer.h"
+
 
 
 using Microsoft::WRL::ComPtr;
@@ -111,6 +114,10 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
     ComPtr<ID3D11RenderTargetView> renderTargetView;
     device->CreateRenderTargetView(backBuffer.Get(), nullptr, &renderTargetView);
 
+    Camera camera; // 카메라
+
+    Timer timer; // 타이머
+
     ComPtr<ID3D11Buffer> Buffer_temp; // vertexBuffer를 위한 temp
 
     struct Vertex {
@@ -182,10 +189,7 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
     cubes[2].position = { 2.0f, 0.0f, 0.0f };
     cubes[2].rotation = { 0.5f, 0.5f, 0.0f };
 
-    XMVECTOR eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-    XMVECTOR at = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
+    XMMATRIX view;
     XMMATRIX projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, 800.0f / 800.0f, 0.01f, 100.0f);
 
     
@@ -297,6 +301,7 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
 
     deviceContext->RSSetViewports(1, &viewport);
 
+
     bool running = true;
     MSG msg = {};
     while (running)
@@ -309,11 +314,21 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
         }
         else
         {
+            timer.Tick();
             float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };  // R, G, B, A — 검정
             deviceContext->ClearRenderTargetView(renderTargetView.Get(), clearColor);
             deviceContext->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-            for (auto& cube : cubes)
+            if (GetAsyncKeyState('W') & 0x8000)
+                camera.MoveForward(5.0f * timer.GetDeltaTime());
+            if (GetAsyncKeyState('S') & 0x8000)
+                camera.MoveForward(-5.0f * timer.GetDeltaTime());
+            if (GetAsyncKeyState('A') & 0x8000)
+                camera.MoveRight(-5.0f * timer.GetDeltaTime());
+            if (GetAsyncKeyState('D') & 0x8000)
+                camera.MoveRight(5.0f * timer.GetDeltaTime());
+
+            for (auto& cube : cubes) 
             {
                 cube.rotation.y += 0.01f;   // 각자 따로 돌게 하고 싶으면 각기 다른 속도도 가능
 
@@ -321,6 +336,7 @@ ComPtr<ID3D11Debug> RunApp(HINSTANCE hInstance, int nCmdShow) {
                 deviceContext->Map(constantvertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
                 ConstantBuffer* cb = (ConstantBuffer*)mapped.pData;
                 cb->world = XMMatrixTranspose(cube.GetWorldMatrix());
+                view = camera.GetViewMatrix();
                 cb->view = XMMatrixTranspose(view);
                 cb->projection = XMMatrixTranspose(projection);
                 deviceContext->Unmap(constantvertexBuffer.Get(), 0);
