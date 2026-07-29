@@ -34,11 +34,16 @@ Peak GPU memory: 1036 bytes
 Outstanding: 0
 ```
 
-### v0.8 - 3d-transform-camera (Planned)
+### v0.8 - 3d-transform-camera (Completed)
 
-- 3D cube rendering
-- Transform system (position / rotation / scale)
-- Camera movement (view / projection matrices)
+- Index Buffer based cube rendering (8 vertices, 36 indices, no duplicate vertex data)
+- Transform system (position / rotation / scale) using DirectXMath, applied in Scale → Rotation → Translation order
+- Constant Buffer for per-frame World / View / Projection matrix upload (Map/Unmap)
+- Depth-Stencil buffer for correct face occlusion
+- Camera class with WASD movement, DeltaTime-based frame-rate-independent motion
+- Non-blocking render loop (PeekMessage) enabling continuous per-frame rendering and rotation
+- Multiple objects (3 cubes) sharing a single model via an array of Transforms
+- Verified with RenderDoc frame capture — debug-named resources (via `SetPrivateData`) visible in the Pipeline State view
 
 ### Scene Architecture (Planned, Fall Semester)
 
@@ -69,8 +74,12 @@ Outstanding: 0
 MSEngine/
   Core/
     Memory/    # MemoryTracker, ObjectPool, ResourceTracker
-    Math/      # Vector2, Matrix2x2
+    Math/
+      Transform.h
+      Legacy/  # Vector2, Matrix2x2 — inherited from TetrisCore (2D), unused after the 3D transition
+    Time/      # Timer (DeltaTime)
   Renderer/
+    Camera.h / Camera.cpp
     Shaders/   # VertexShader.hlsl, PixelShader.hlsl
   main.cpp
 ```
