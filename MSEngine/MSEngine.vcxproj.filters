@@ -31,6 +31,9 @@
     <Filter Include="Core\Time">
       <UniqueIdentifier>{b09851e6-60b1-4d16-b4c5-f65affb6485f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Math\Legacy">
+      <UniqueIdentifier>{80958f60-5d0d-4c2a-81e0-6aff684f5181}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Memory\MemoryTracker.h">
@@ -38,12 +41,6 @@
     </ClInclude>
     <ClInclude Include="Core\Memory\ObjectPool.h">
       <Filter>Core\Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Math\Matrix2x2.h">
-      <Filter>Core\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Math\Vector2.h">
-      <Filter>Core\Math</Filter>
     </ClInclude>
     <ClInclude Include="Core\Memory\ResourceTracker.h">
       <Filter>Core\Memory</Filter>
@@ -56,6 +53,12 @@
     </ClInclude>
     <ClInclude Include="Renderer\Camera.h">
       <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Legacy\Matrix2x2.h">
+      <Filter>Core\Math\Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Legacy\Vector2.h">
+      <Filter>Core\Math\Legacy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

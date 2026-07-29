@@ -1,3 +1,4 @@
+// TetrisCore_Engine(2D)에서 계승. MSEngine은 3D 전환 이후 DirectXMath(XMFLOAT3, XMMATRIX)를 사용하므로 현재 미사용.
 #pragma once
 #include <cmath>
 

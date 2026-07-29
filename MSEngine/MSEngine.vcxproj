@@ -125,9 +125,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Core\Math\Matrix2x2.h" />
+    <ClInclude Include="Core\Math\Legacy\Matrix2x2.h" />
+    <ClInclude Include="Core\Math\Legacy\Vector2.h" />
     <ClInclude Include="Core\Math\Transform.h" />
-    <ClInclude Include="Core\Math\Vector2.h" />
     <ClInclude Include="Core\Memory\MemoryTracker.h" />
     <ClInclude Include="Core\Memory\ObjectPool.h" />
     <ClInclude Include="Core\Memory\ResourceTracker.h" />
