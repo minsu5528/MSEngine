@@ -1,5 +1,7 @@
 # MSEngine Development
 
+Development blog (Korean): [#1 Win32 & DX11 Bootstrap](https://velog.io/@roql/MSEngine-개발기-1.-Win32와-DirectX11로-화면에-첫-삼각형-띄우기) · [#2 ComPtr & Resource Tracking](https://velog.io/@roql/MSEngine-개발기-2.-ComPtr-그리고-DirectX-리소스-수명-추적하기) · [#3 View/Projection & Camera](https://velog.io/@roql/MSEngine-개발기-3.-ViewProjection-행렬을-직접-구현하며-카메라-만들기)
+
 This project is a successor to [TetrisCore_Engine](https://github.com/minsu5528/TetrisCore_Engine), built to deepen control over low-level systems — memory, math, and rendering — without relying on a commercial engine. MSEngine inherits the validated core systems from TetrisCore and extends them into a DirectX 11 based rendering pipeline.
 
 ## Predecessor Project
@@ -25,6 +27,10 @@ Inherited and modernized the core systems proven in TetrisCore_Engine.
 - MemoryTracker extended to track DX11 resource lifetimes by category (Buffer / Shader / Texture) with peak GPU memory tracking
 - Cross-validated against the debug layer's `ID3D11Debug::ReportLiveDeviceObjects`
 
+Related posts (Korean): [Win32 and DirectX11 initialization — from window to first triangle](https://velog.io/@roql/MSEngine-개발기-1.-Win32와-DirectX11로-화면에-첫-삼각형-띄우기), [ComPtr and DirectX resource lifetime tracking](https://velog.io/@roql/MSEngine-개발기-2.-ComPtr-그리고-DirectX-리소스-수명-추적하기)
+
+![Cube Scene](MSEngine/docs/images/triangle.png)
+
 ```
 [Resource Report]
 Buffers created: 1, destroyed: 1
@@ -44,6 +50,10 @@ Outstanding: 0
 - Non-blocking render loop (PeekMessage) enabling continuous per-frame rendering and rotation
 - Multiple objects (3 cubes) sharing a single model via an array of Transforms
 - Verified with RenderDoc frame capture — debug-named resources (via `SetPrivateData`) visible in the Pipeline State view
+
+Related post (Korean): [Building a camera with View/Projection matrices](https://velog.io/@roql/MSEngine-개발기-3.-ViewProjection-행렬을-직접-구현하며-카메라-만들기)
+
+![Cube Scene](MSEngine/docs/images/cube_scene.gif)
 
 ### Scene Architecture (Planned, Fall Semester)
 
