@@ -34,6 +34,12 @@
     <Filter Include="Core\Math\Legacy">
       <UniqueIdentifier>{80958f60-5d0d-4c2a-81e0-6aff684f5181}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs">
+      <UniqueIdentifier>{0cc4cf0a-6dc2-4d07-83f7-422ec2c3e9c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="docs\images">
+      <UniqueIdentifier>{43cf4779-5976-4a0f-8d2c-c991de8636ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Memory\MemoryTracker.h">
@@ -81,5 +87,13 @@
       <Filter>Renderer\Shaders</Filter>
     </None>
     <None Include="..\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="docs\screenshots\cube_scene.gif">
+      <Filter>docs\images</Filter>
+    </Image>
+    <Image Include="docs\screenshots\triangle.png">
+      <Filter>docs\images</Filter>
+    </Image>
   </ItemGroup>
 </Project>
