@@ -10,7 +10,6 @@ void Camera::MoveForward(float speed)
 
 void Camera::MoveRight(float speed)
 {
-    // XMVector3Cross로 오른쪽 벡터 구하고, MoveForward랑 같은 패턴으로 position 갱신
     XMVECTOR pos = XMLoadFloat3(&position);
     XMVECTOR fwd = XMLoadFloat3(&forward);
     XMVECTOR use_up = XMLoadFloat3(&up);
@@ -23,13 +22,11 @@ void Camera::MoveRight(float speed)
 
 XMMATRIX Camera::GetViewMatrix() const
 {
-    // at = position + forward, 그리고 XMMatrixLookAtLH 호출
-    // XMLoadFloat3로 position/forward/up 전부 변환해야 함
     XMVECTOR pos = XMLoadFloat3(&position);
     XMVECTOR fwd = XMLoadFloat3(&forward);
     XMVECTOR use_up = XMLoadFloat3(&up);
 
-    fwd = XMVector3Normalize(fwd); // 정규화
+    fwd = XMVector3Normalize(fwd);
 
     XMVECTOR at = pos + fwd;
 
